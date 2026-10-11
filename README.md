@@ -92,6 +92,15 @@ docker compose up -d          # Pull the mianhuatang11/artex image and PostgreSQ
 > The original `autumn27/artex` image was removed from Docker Hub. The image is now maintained by this repository as **`mianhuatang11/artex`**.
 > If the image source is unavailable, or you want to modify the code, build directly from source with `docker compose build && docker compose up -d`.
 > The Dockerfile uses a multi-stage build (static frontend export → static Go compilation → runtime image), with dependency sources suitable for environments with limited external network access. Override them with `--build-arg GOPROXY=...` and/or `--build-arg NPM_REGISTRY=...` when needed.
+>
+> **A fresh clone does not run your checked-out source unless you build it.** The compose file sets *both* `image: mianhuatang11/artex:${ARTEX_TAG:-latest}` and `build:`, so Compose reuses the image whenever that tag already exists locally or can be pulled from Docker Hub — the `build:` section is skipped entirely. The result is that two machines running the same commit can serve different builds (for example, one running an image built locally from this source, the other still running the older image pulled from Docker Hub). To guarantee the container matches the source you cloned, always build explicitly:
+>
+> ```bash
+> docker compose up -d --build     # build from the checkout, then start
+> docker image prune -f            # drop the superseded image (optional)
+> ```
+>
+> **Hosts without the Compose v2 plugin:** the commands above use `docker compose` (bundled with Docker 20.10+ / Docker Desktop). On hosts where only the standalone binary is installed, `docker compose up -d --build` fails with `unknown command: docker compose` or the misleading `unknown shorthand flag: 'd' in -d`. Check with `docker compose version`; if it errors, substitute the standalone binary instead: `docker-compose up -d --build`.
 
 The image includes common tools such as ripgrep, curl, vim, npm, and nmap. The `./skills` and `./data` directories are persisted through bind mounts.
 
@@ -180,6 +189,8 @@ docker compose pull artex
 docker compose up -d artex     # Restart with the new image and migrate the schema
 docker image prune -f          # Remove old images (optional)
 ```
+
+> The commands above deliberately **pull** the published image. If you instead run a build of your own checkout, skip `docker compose pull artex` and rebuild it: `docker compose up -d --build artex` — otherwise Compose restarts the previously built/pulled image and your changes never take effect (see Installation, Method 2).
 
 ### Method 4: Prebuilt binary (Releases)
 
