@@ -569,9 +569,6 @@ export const assetCounts: Record<string, number> = assets.reduce<Record<string, 
   return m;
 }, {});
 
-// assetRef 把资产 id 变成 finding 上挂的资产引用(label 与后端 coverageNodeLabel
-// 的取值顺序一致:URL > 域名 > IP > Application名)。「按资产」视图的树就is靠这些引用
-// 把发现挂到资产上的。
 function assetRef(id: number): FindingAsset {
   const asset = assets.find((candidate) => candidate.id === id);
   if (!asset) throw new Error(`mock assetRef: unknown asset ${id}`);
@@ -1001,8 +998,7 @@ export const explorationGraph: { nodes: TaskNode[]; edges: Edge[] } = {
       ts: T("2026-07-25T23:50:00Z"),
     },
 
-    // ── 事实 ──
-    {
+        {
       id: "fa1",
       type: "fact",
       payload: P({ summary: "Found subdomain admin.acme.com (Element-UI admin console)" }),
@@ -1111,8 +1107,7 @@ export const explorationGraph: { nodes: TaskNode[]; edges: Edge[] } = {
       ts: T("2026-07-25T23:20:00Z"),
     },
 
-    // ── 漏洞 ──
-    {
+        {
       id: "fi1",
       type: "finding",
       payload: P({ summary: "Default admin credentials admin/admin123" }),
@@ -1224,13 +1219,11 @@ export const explorationGraph: { nodes: TaskNode[]; edges: Edge[] } = {
     },
   ],
   edges: [
-    // 根 → 目标
-    { src: "root", dst: "g1", rel: "spawns" },
+        { src: "root", dst: "g1", rel: "spawns" },
     { src: "root", dst: "g2", rel: "spawns" },
     { src: "root", dst: "g3", rel: "spawns" },
     { src: "root", dst: "g4", rel: "spawns" },
-    // 目标 → 意图
-    { src: "g1", dst: "i1", rel: "spawns" },
+        { src: "g1", dst: "i1", rel: "spawns" },
     { src: "g1", dst: "i2", rel: "spawns" },
     { src: "g1", dst: "i3", rel: "spawns" },
     { src: "g2", dst: "i4", rel: "spawns" },
@@ -1244,8 +1237,7 @@ export const explorationGraph: { nodes: TaskNode[]; edges: Edge[] } = {
     { src: "g4", dst: "i11", rel: "spawns" },
     { src: "g4", dst: "i12", rel: "spawns" },
     { src: "g4", dst: "i13", rel: "spawns" },
-    // 意图 → 事实 / 漏洞（产出）
-    { src: "i1", dst: "fa1", rel: "yields" },
+        { src: "i1", dst: "fa1", rel: "yields" },
     { src: "i4", dst: "fa2", rel: "yields" },
     { src: "i2", dst: "fi1", rel: "yields" },
     { src: "i4", dst: "fi2", rel: "yields" },
@@ -1266,8 +1258,7 @@ export const explorationGraph: { nodes: TaskNode[]; edges: Edge[] } = {
     { src: "i12", dst: "fa10", rel: "yields" },
     { src: "i12", dst: "fiKerb", rel: "yields" },
     { src: "i13", dst: "fiDC", rel: "yields" },
-    // 事实 → 新意图（事实驱动的多层递进）
-    { src: "fa3", dst: "i7", rel: "derived_from" },
+        { src: "fa3", dst: "i7", rel: "derived_from" },
     { src: "fa4", dst: "i8", rel: "derived_from" },
     { src: "fa4", dst: "i9", rel: "derived_from" },
     { src: "faCreds", dst: "i10", rel: "derived_from" },
@@ -1275,12 +1266,10 @@ export const explorationGraph: { nodes: TaskNode[]; edges: Edge[] } = {
     { src: "fa7", dst: "i12", rel: "derived_from" },
     { src: "fa9", dst: "i13", rel: "derived_from" },
     { src: "fa10", dst: "i13", rel: "derived_from" },
-    // 提示 → 意图
-    { src: "h1", dst: "i2", rel: "derived_from" },
+        { src: "h1", dst: "i2", rel: "derived_from" },
     { src: "h2", dst: "i11", rel: "derived_from" },
     { src: "h3", dst: "i10", rel: "derived_from" },
-    // 漏洞 → proves目标达成
-    { src: "fi1", dst: "g1", rel: "proves" },
+        { src: "fi1", dst: "g1", rel: "proves" },
     { src: "fiRce", dst: "g3", rel: "proves" },
     { src: "fiDC", dst: "g4", rel: "proves" },
   ],
@@ -1291,13 +1280,8 @@ export const frontier: TaskNode[] = explorationGraph.nodes.filter(
   (n) => n.type === "intent" && (n.state === "open" || n.state === "running"),
 );
 
-// ── Activity（执行过程）─────────────────────────────────────────────────────
-// 会话由 sessions-tab 从「意图」派生（session.id = intent.id），transcript = 匹配
-// intent_id 的活动流。planner=worker "planner"、主 agent=worker "mainagent"。
-// 每个 worker 会话含完整工具执行链（tool_use → tool_result → …→ result）。
 export const activity: Activity[] = [
-  // planner —— 每轮完整决策链：读态势 → 拉 worker 产出对照 → 判目标 → add_intent 派方向
-  // ── Round 0 · decompose goals and dispatch initial intents（2026-07-24 09:12）──
+    // ── Round 0 · decompose goals and dispatch initial intents（2026-07-24 09:12）──
   { seq: 1000, worker: "planner", ts: T("2026-07-24T09:12:10Z"), kind: "round", summary: "Round 0 · goal decomposition" },
   {
     seq: 1001,
@@ -2111,8 +2095,7 @@ export const activity: Activity[] = [
     cache_write_tokens: 8000,
   },
 
-  // work#6 · i6 shop 指纹与 CVE 关联（done）
-  {
+    {
     seq: 320,
     worker: "work#6",
     intent_id: "i6",
@@ -2176,8 +2159,7 @@ export const activity: Activity[] = [
     cache_write_tokens: 6000,
   },
 
-  // work#7 · i7 反序列化 RCE 拿reverse shell（done，proves g3）
-  {
+    {
     seq: 330,
     worker: "work#7",
     intent_id: "i7",
@@ -2692,8 +2674,7 @@ export const activity: Activity[] = [
     cache_write_tokens: 14000,
   },
 
-  // 主 agent（human-in-the-loop conversation）
-  { seq: 70, worker: "mainagent", ts: T("2026-07-26T03:18:00Z"), kind: "user", summary: "Where should we start in the admin console?" },
+    { seq: 70, worker: "mainagent", ts: T("2026-07-26T03:18:00Z"), kind: "user", summary: "Where should we start in the admin console?" },
   {
     seq: 71,
     worker: "mainagent",
@@ -3020,8 +3001,7 @@ export const llmProfiles: LLMProfile[] = [
     is_default: true,
     priority: 0,
     pool_exclude: false,
-    // anthropic 的字段名固定，故 max_tokens_field 恒为空。
-    max_tokens: 0,
+        max_tokens: 0,
     max_tokens_field: "",
   },
   {
@@ -3039,8 +3019,7 @@ export const llmProfiles: LLMProfile[] = [
     is_default: false,
     priority: 10,
     pool_exclude: false,
-    // openai 格式 + 推理模型：上限走 max_completion_tokens。
-    max_tokens: 8192,
+        max_tokens: 8192,
     max_tokens_field: "max_completion_tokens",
   },
 ];
@@ -3345,8 +3324,6 @@ export const settings: Settings = {
   noa_compaction: false,
 };
 
-// ── LLM 轮询（故障转移）──────────────────────────────────────────────────────
-// demo：激活配置正常，备用配置刚因余额不足熔断，正在冷却。
 export const llmPool: LLMPoolStatus = {
   enabled: true,
   bind_fallback: false,
@@ -4090,7 +4067,6 @@ export const commandRecords = [
   },
 ];
 
-// ── LLM 录制（/llm/records、/llm/records/{id}）──
 export const llmRecords = [
   {
     id: 1,

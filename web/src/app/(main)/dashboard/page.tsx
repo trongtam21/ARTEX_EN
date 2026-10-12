@@ -328,15 +328,13 @@ export default function DashboardPage() {
   // tasks whose llm_profile_id is null/undefined used the active default profile
   const defaultProfileId = activeProfile ? Number(activeProfile.id) : null;
 
-  // 数据源开关：Legacy = activity（task.tokens + 会话），Current = llm_usage 计量账本。
-  const [tokenVersion, setTokenVersion] = React.useState<"old" | "new">("old");
+    const [tokenVersion, setTokenVersion] = React.useState<"old" | "new">("old");
   // selected profile tab: "all" = All; number = specific profile id
   const [tokenTab, setTokenTab] = React.useState<number | null | "all">("all");
   // day range for the daily bar chart
   const [tokenDays, setTokenDays] = React.useState<7 | 30 | 90 | 180 | 365>(30);
 
-  // profile 名 → id，用于把 llm_usage 的 profile_name 映射到现有 profile 分栏。
-  const profileIdByName = React.useMemo(() => {
+    const profileIdByName = React.useMemo(() => {
     const m = new Map<string, number>();
     for (const p of llmProfiles) m.set(p.name, Number(p.id));
     return m;
@@ -344,8 +342,7 @@ export default function DashboardPage() {
 
   type Bucket = { input: number; output: number; cacheRead: number; cacheWrite: number; taskCount: number };
 
-  // Legacy：按 profile 归桶（来自 activity 的 task.tokens + 会话用量）。
-  const tokenByProfileOld = React.useMemo<Map<number | null, Bucket>>(() => {
+    const tokenByProfileOld = React.useMemo<Map<number | null, Bucket>>(() => {
     const m = new Map<number | null, Bucket>();
     const fold = (key: number | null, inp: number, out: number, cr: number, cw: number, addTask: boolean) => {
       const prev = m.get(key) ?? { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, taskCount: 0 };
@@ -380,12 +377,10 @@ export default function DashboardPage() {
     return m;
   }, [tasks, convTokens, defaultProfileId]);
 
-  // Current：按 profile 归桶（来自 llm_usage 全局聚合，逐次调用精确）。
-  const tokenByProfileNew = React.useMemo<Map<number | null, Bucket>>(() => {
+    const tokenByProfileNew = React.useMemo<Map<number | null, Bucket>>(() => {
     const m = new Map<number | null, Bucket>();
     for (const p of usageStats?.by_profile ?? []) {
-      // 未匹配到现有 profile（改名/删除/空名）→ 落到Default桶，仍计入「All」。
-      const key = profileIdByName.get(p.profile_name) ?? defaultProfileId;
+            const key = profileIdByName.get(p.profile_name) ?? defaultProfileId;
       const prev = m.get(key) ?? { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, taskCount: 0 };
       m.set(key, {
         input: prev.input + p.input_tokens,
@@ -422,8 +417,7 @@ export default function DashboardPage() {
       : { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, taskCount: 0 };
   }, [tokenTab, tokenByProfile]);
 
-  // Legacy每日：把Tasks/会话的总量按其创建日期归桶（近似，非真实每日消耗）。
-  const dailyTokenDataOld = React.useMemo(() => {
+    const dailyTokenDataOld = React.useMemo(() => {
     const now = new Date();
     now.setDate(now.getDate() - tokenDays);
     const cutoff = now.toISOString().slice(0, 10);
@@ -449,8 +443,7 @@ export default function DashboardPage() {
     return [...m.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([date, v]) => ({ date: date.slice(5), ...v }));
   }, [tasks, convTokens, tokenDays, tokenTab, defaultProfileId]);
 
-  // Current每日：来自 llm_usage 的真实每日消耗（ts 是实际调用时刻）。
-  const dailyTokenDataNew = React.useMemo(() => {
+    const dailyTokenDataNew = React.useMemo(() => {
     const now = new Date();
     now.setDate(now.getDate() - tokenDays);
     const cutoff = now.toISOString().slice(0, 10);
@@ -595,8 +588,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-1.5 font-semibold text-xs">
             <ZapIcon className="size-3.5 text-muted-foreground" />
             LLM token usage
-            {/* 数据源开关：Legacy=activity 统计（含历史Tasks），Current=llm_usage 计量账本（更准，仅覆盖启用后） */}
-            <div className="ml-1 flex gap-0.5 rounded-md border bg-muted/30 p-0.5">
+                        <div className="ml-1 flex gap-0.5 rounded-md border bg-muted/30 p-0.5">
               {(
                 [
                   { v: "old", label: "Legacy" },
@@ -693,8 +685,7 @@ export default function DashboardPage() {
             {/* Per-type bars */}
             <div className="space-y-3">
               {(() => {
-                // input 已含缓存；拆成不重叠三段：未命中输In + Cache hits + 输出 = 总量。
-                const total = displayedTokens.input + displayedTokens.output;
+                                const total = displayedTokens.input + displayedTokens.output;
                 return [
                   {
                     label: "Input (uncached)",
@@ -736,8 +727,7 @@ export default function DashboardPage() {
 
             {/* Cache hit rate */}
             {(() => {
-              // input 已含缓存 → 命中率 = Cache hits / 总输入。
-              const denominator = displayedTokens.input;
+                            const denominator = displayedTokens.input;
               const hitPct = denominator > 0 ? Math.round((displayedTokens.cacheRead / denominator) * 100) : 0;
               return (
                 <div className="flex items-center justify-between rounded-lg border bg-muted/20 px-3 py-2 text-[10px]">
@@ -1043,8 +1033,7 @@ export default function DashboardPage() {
         </table>
       </Card>
 
-      {/* ── Row 5: Asset distribution | Traffic status codes | 拦截 & Pending approvals ── */}
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
         {/* Asset distribution */}
         <Card className="p-4">
           <SectionTitle icon={NetworkIcon} sub="By type">

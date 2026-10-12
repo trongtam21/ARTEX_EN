@@ -39,93 +39,87 @@ const POLL_MS = 8000;
 
 type KindMeta = { label: string; icon: LucideIcon; dot: string; chip: string };
 
-// 播报板自己的展示元数据。刻意不复用探索链路图那份:图是拓扑视角(节点卡片、连线配色),
-// 播报是流水视角(时间轴行),两边的信息密度和配色需求不同,各自演进更省事。
 const KIND_META: Record<string, KindMeta> = {
   begin: {
-    label: "起点",
+    label: "Origin",
     icon: FlagIcon,
     dot: "bg-slate-500",
     chip: "bg-slate-500/15 text-slate-600 dark:text-slate-300",
   },
   task: {
-    label: "根任务",
+    label: "Root Task",
     icon: FlagIcon,
     dot: "bg-slate-500",
     chip: "bg-slate-500/15 text-slate-600 dark:text-slate-300",
   },
   goal: {
-    label: "目标",
+    label: "Goal",
     icon: TargetIcon,
     dot: "bg-emerald-500",
     chip: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
   },
   intent: {
-    label: "意图",
+    label: "Intent",
     icon: CompassIcon,
     dot: "bg-blue-500",
     chip: "bg-blue-500/15 text-blue-600 dark:text-blue-400",
   },
   fact: {
-    label: "事实",
+    label: "Fact",
     icon: FlaskConicalIcon,
     dot: "bg-amber-500",
     chip: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
   },
   finding: {
-    label: "漏洞",
+    label: "Finding",
     icon: BugIcon,
     dot: "bg-rose-500",
     chip: "bg-rose-500/15 text-rose-600 dark:text-rose-400",
   },
   hint: {
-    label: "提示",
+    label: "Hint",
     icon: LightbulbIcon,
     dot: "bg-violet-500",
     chip: "bg-violet-500/15 text-violet-600 dark:text-violet-400",
   },
   digest: {
-    label: "压缩",
+    label: "Digest",
     icon: LayersIcon,
     dot: "bg-teal-500",
     chip: "bg-teal-500/15 text-teal-600 dark:text-teal-400",
   },
 };
 
-// 可筛选的类型。起点(fact/state=origin)不单独列,它跟着「事实」一起过滤。
 const FILTER_KINDS: ExploreKind[] = ["goal", "intent", "fact", "finding", "hint", "digest"];
 
 const REL_LABEL: Record<string, string> = {
-  spawns: "派生",
-  derived_from: "意图链",
-  yields: "产出",
-  proves: "证明",
-  covers: "压缩",
+  spawns: "Spawns",
+  derived_from: "Derived from",
+  yields: "Yields",
+  proves: "Proves",
+  covers: "Covers",
 };
 
-// goal / intent 的状态语义由全局 status 表提供(StatusBadge);其余类型的状态只在
-// 图和播报里出现,这里补一份。
 const STATE_META: Record<string, Record<string, { label: string; tone: Tone }>> = {
   fact: {
-    origin: { label: "起点", tone: "slate" },
-    confirmed: { label: "已确认", tone: "green" },
-    dismissed: { label: "已否定", tone: "slate" },
+    origin: { label: "Origin", tone: "slate" },
+    confirmed: { label: "Confirmed", tone: "green" },
+    dismissed: { label: "Dismissed", tone: "slate" },
   },
   finding: {
-    confirmed: { label: "已确认", tone: "red" },
-    dismissed: { label: "已排除", tone: "slate" },
+    confirmed: { label: "Confirmed", tone: "red" },
+    dismissed: { label: "Dismissed", tone: "slate" },
   },
   hint: {
-    active: { label: "待采纳", tone: "violet" },
-    consumed: { label: "已采纳", tone: "slate" },
+    active: { label: "Pending", tone: "violet" },
+    consumed: { label: "Accepted", tone: "slate" },
   },
   digest: {
-    active: { label: "生效中", tone: "green" },
-    superseded: { label: "已替代", tone: "slate" },
+    active: { label: "Active", tone: "green" },
+    superseded: { label: "Superseded", tone: "slate" },
   },
 };
 
-// 任务根是 state=origin 的 fact,播报里读作「起点」。
 function viewKind(n: TaskNode): string {
   return n.type === "fact" && n.state === "origin" ? "begin" : n.type;
 }
@@ -152,14 +146,13 @@ function summaryOf(n: TaskNode): string {
         if (typeof v === "string" && v.trim()) return v;
       }
     } catch {
-      return raw; // 非 JSON payload:原样播报
-    }
+      return raw;     }
   }
   return raw;
 }
 
 function prettyPayload(raw?: string): string {
-  if (!raw?.trim()) return "（无 payload）";
+  if (!raw?.trim()) return "(empty payload)";
   try {
     return JSON.stringify(JSON.parse(raw), null, 2);
   } catch {
@@ -170,14 +163,14 @@ function prettyPayload(raw?: string): string {
 function relTime(ts: number, now: number): string {
   if (!now || !ts) return "";
   const sec = Math.max(0, (now - ts) / 1000);
-  if (sec < 60) return "刚刚";
-  if (sec < 3600) return `${Math.floor(sec / 60)} 分钟前`;
-  if (sec < 86400) return `${Math.floor(sec / 3600)} 小时前`;
-  return `${Math.floor(sec / 86400)} 天前`;
+  if (sec < 60) return "just now";
+  if (sec < 3600) return `${Math.floor(sec / 60)} minutes ago`;
+  if (sec < 86400) return `${Math.floor(sec / 3600)} hours ago`;
+  return `${Math.floor(sec / 86400)} days ago`;
 }
 
-const dayFmt = new Intl.DateTimeFormat("zh-CN", { month: "long", day: "numeric", weekday: "short" });
-const clockFmt = new Intl.DateTimeFormat("zh-CN", {
+const dayFmt = new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric", weekday: "short" });
+const clockFmt = new Intl.DateTimeFormat("en-US", {
   hour: "2-digit",
   minute: "2-digit",
   second: "2-digit",
@@ -209,17 +202,14 @@ function KindChip({ kind }: { kind: string }) {
   );
 }
 
-// 节点锚定的资产:类型标签 + 可辨识文本。数据随播报页一起下发(node id → 资产),
-// 展开时直接展示,不额外请求。
 function AssetList({ assets, dense = false }: { assets: FindingAsset[]; dense?: boolean }) {
   if (assets.length === 0) return null;
   return (
     <div>
-      <div className="mb-1.5 font-medium text-muted-foreground text-xs">涉及资产 · {assets.length}</div>
+      <div className="mb-1.5 font-medium text-muted-foreground text-xs">Related assets · {assets.length}</div>
       <ul className="flex flex-wrap gap-1.5">
         {assets.map((a) => {
-          // 运行时 a.type 可能是标签表未覆盖的类型,退回原始字符串。转一层类型让回退不被判成多余。
-          const typeLabel =
+                    const typeLabel =
             (taskAssetTypeLabel as (t: NewAssetType) => string | undefined)(a.type as NewAssetType) || a.type;
           return (
             <li
@@ -240,8 +230,6 @@ function AssetList({ assets, dense = false }: { assets: FindingAsset[]; dense?: 
   );
 }
 
-// 悬停在上下游条目上时弹出的节点名片:类型/状态/来源/时间 + 摘要 + payload 片段 + 涉及资产。
-// 数据来自本页已经拿到的 refs,不额外发请求——播报接口已经把邻居节点整份带回来了。
 function RelatedNodeCard({ node, assets }: { node: TaskNode; assets: FindingAsset[] }) {
   const kind = viewKind(node);
   const meta = KIND_META[kind] ?? KIND_META.fact;
@@ -258,11 +246,11 @@ function RelatedNodeCard({ node, assets }: { node: TaskNode; assets: FindingAsse
         )}
       </div>
       <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-muted-foreground text-xs">
-        <span>类型 {meta.label}</span>
-        <span>来源 {node.origin || "system"}</span>
-        <span>{Number.isNaN(ts) ? node.ts : new Date(ts).toLocaleString("zh-CN")}</span>
+        <span>Type: {meta.label}</span>
+        <span>Source: {node.origin || "system"}</span>
+        <span>{Number.isNaN(ts) ? node.ts : new Date(ts).toLocaleString("en-US")}</span>
       </div>
-      <p className="line-clamp-4 break-words text-xs">{summary || "（无摘要）"}</p>
+      <p className="line-clamp-4 break-words text-xs">{summary || "(no summary)"}</p>
       <AssetList assets={assets} dense />
       <pre className="max-h-40 overflow-auto whitespace-pre-wrap rounded border bg-muted/40 p-2 font-mono text-[11px]">
         {prettyPayload(node.payload)}
@@ -271,7 +259,6 @@ function RelatedNodeCard({ node, assets }: { node: TaskNode; assets: FindingAsse
   );
 }
 
-// 一条播报涉及的上下游:上游 = 指向本节点的边,下游 = 本节点指出去的边。
 function RelatedList({
   title,
   rows,
@@ -303,7 +290,7 @@ function RelatedList({
                       className="flex min-w-0 cursor-help items-center gap-2 text-left hover:underline"
                     >
                       <KindChip kind={viewKind(node)} />
-                      <span className="truncate">{summaryOf(node) || `节点 #${node.id}`}</span>
+                      <span className="truncate">{summaryOf(node) || `Node #${node.id}`}</span>
                     </button>
                   </HoverCardTrigger>
                   <HoverCardContent align="start" className="w-96">
@@ -311,7 +298,7 @@ function RelatedList({
                   </HoverCardContent>
                 </HoverCard>
               ) : (
-                <span className="text-muted-foreground">节点 #{row.id}</span>
+                <span className="text-muted-foreground">Node #{row.id}</span>
               )}
             </li>
           );
@@ -347,14 +334,13 @@ function BroadcastRow({
 
   return (
     <div className={cn("relative grid grid-cols-[4.5rem_1.75rem_1fr] gap-x-2", fresh && "bg-primary/5")}>
-      {/* 时间列 */}
+      {/* time column */}
       <div className="py-3 text-right text-muted-foreground text-xs tabular-nums">
         <div>{Number.isNaN(ts) ? "--:--:--" : clockFmt.format(ts)}</div>
         <div className="text-[11px] opacity-70">{relTime(ts, now)}</div>
       </div>
 
-      {/* 时间轴:竖线 + 类型圆点 */}
-      <div className="relative flex justify-center">
+            <div className="relative flex justify-center">
         <span className="absolute inset-y-0 w-px bg-border" />
         <span
           className={cn(
@@ -366,7 +352,7 @@ function BroadcastRow({
         </span>
       </div>
 
-      {/* 内容列 */}
+      {/* content column */}
       <div className="min-w-0 border-b py-3 pr-1 last:border-b-0">
         <button
           type="button"
@@ -386,12 +372,12 @@ function BroadcastRow({
               )}
               {fresh && (
                 <span className="rounded bg-primary px-1.5 py-0.5 font-semibold text-[10px] text-primary-foreground">
-                  新
+                  New
                 </span>
               )}
               <span className="ml-auto shrink-0 text-muted-foreground text-xs">{node.origin || "system"}</span>
             </div>
-            <p className={cn("mt-1 text-sm", !open && "line-clamp-2")}>{summary || `节点 #${node.id}`}</p>
+            <p className={cn("mt-1 text-sm", !open && "line-clamp-2")}>{summary || `Node #${node.id}`}</p>
           </div>
         </button>
 
@@ -399,23 +385,23 @@ function BroadcastRow({
           <div className="mt-2 ml-5 flex flex-col gap-3 rounded-md border bg-muted/30 p-3">
             <div className="flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground text-xs">
               <span>
-                节点 <code className="font-mono">#{node.id}</code>
+                Node <code className="font-mono">#{node.id}</code>
               </span>
-              <span>类型 {meta.label}</span>
-              <span>来源 {node.origin || "system"}</span>
-              <span>{Number.isNaN(ts) ? node.ts : new Date(ts).toLocaleString("zh-CN")}</span>
+              <span>Type: {meta.label}</span>
+              <span>Source: {node.origin || "system"}</span>
+              <span>{Number.isNaN(ts) ? node.ts : new Date(ts).toLocaleString("en-US")}</span>
             </div>
             {node.state === "deleted" && node.delete_reason && (
               <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-xs">
-                <span className="font-medium text-destructive">删除原因</span>
+                <span className="font-medium text-destructive">Deletion reason</span>
                 <span className="ml-2 break-words text-muted-foreground">{node.delete_reason}</span>
               </div>
             )}
             <AssetList assets={assets[node.id] ?? []} />
             {(upstream.length > 0 || downstream.length > 0) && (
               <div className="flex flex-col gap-3 sm:flex-row">
-                <RelatedList title="上游 · 由此而来" rows={upstream} refs={refs} assets={assets} />
-                <RelatedList title="下游 · 由此产生" rows={downstream} refs={refs} assets={assets} />
+                <RelatedList title="Upstream · comes from" rows={upstream} refs={refs} assets={assets} />
+                <RelatedList title="Downstream · produces" rows={downstream} refs={refs} assets={assets} />
               </div>
             )}
             <div>
@@ -453,9 +439,7 @@ export function BroadcastTab({ taskId }: { taskId: string }) {
   const seenRef = React.useRef<Set<string>>(new Set());
   const baselineRef = React.useRef<number | null>(null);
   const streamRef = React.useRef("");
-  // 只有「最新在前的第 1 页」才是真正的直播位；其余位置轮询只更新未读计数，
-  // 不动列表，免得翻页/展开时内容在脚下变。
-  const atLive = page === 1 && order === "desc";
+      const atLive = page === 1 && order === "desc";
 
   React.useEffect(() => {
     setNow(Date.now());
@@ -463,8 +447,7 @@ export function BroadcastTab({ taskId }: { taskId: string }) {
     return () => clearInterval(t);
   }, []);
 
-  // 输入防抖:打字停 300ms 才真正查询,并回到第一页。
-  React.useEffect(() => {
+    React.useEffect(() => {
     const t = setTimeout(() => {
       setQuery(queryInput);
       setPage(1);
@@ -474,10 +457,7 @@ export function BroadcastTab({ taskId }: { taskId: string }) {
 
   React.useEffect(() => {
     let alive = true;
-    let rendered = false; // 本次查询是否已经把内容渲染出来过
-    // 换任务/筛选/排序 = 换了一条播报流:清掉「新」标记和未读基线。翻页不算换流,
-    // 否则回到最新时就没有未读计数可算了。
-    const stream = `${taskId}|${kinds.join(",")}|${query}|${order}`;
+    let rendered = false;             const stream = `${taskId}|${kinds.join(",")}|${query}|${order}`;
     if (streamRef.current !== stream) {
       streamRef.current = stream;
       seenRef.current = new Set();
@@ -489,8 +469,7 @@ export function BroadcastTab({ taskId }: { taskId: string }) {
         .explorationNodes(taskId, { page, size, kinds, q: query, order })
         .then((r) => {
           if (!alive) return;
-          // 直播位每轮都刷新;其它位置只渲染第一次,之后轮询仅更新未读计数。
-          if (atLive || !rendered) {
+                    if (atLive || !rendered) {
             rendered = true;
             setItems(r.items);
             setEdges(r.edges);
@@ -511,8 +490,7 @@ export function BroadcastTab({ taskId }: { taskId: string }) {
           setLoaded(true);
         })
         .catch(() => {
-          // 轮询是尽力而为:保留上一次成功的播报内容,下一轮自动Retry。
-        });
+                  });
     void load();
     if (!live) {
       return () => {
@@ -537,9 +515,7 @@ export function BroadcastTab({ taskId }: { taskId: string }) {
     setPending(0);
   };
 
-  // Service端的 refs 只补「不在本页的邻居」,同页节点之间的引用要靠 items 自己兜底,
-  // 否则相邻两条播报互相引用时会退化成光秃秃的「节点 #id」。
-  const nodeIndex = React.useMemo(() => {
+      const nodeIndex = React.useMemo(() => {
     const idx: Record<string, TaskNode> = { ...refs };
     for (const n of items) idx[n.id] = n;
     return idx;
@@ -549,16 +525,14 @@ export function BroadcastTab({ taskId }: { taskId: string }) {
   const start = total === 0 ? 0 : (page - 1) * size + 1;
   const end = (page - 1) * size + items.length;
 
-  // 换任务或筛选后条数变少时,把越界的页码收回来。
-  React.useEffect(() => {
+    React.useEffect(() => {
     if (page > pageCount) setPage(pageCount);
   }, [page, pageCount]);
 
-  // 按天分组:播报流按日期断行,长任务翻页时还能认出「这是哪天的事」。
-  const groups: Array<{ day: string; rows: TaskNode[] }> = [];
+    const groups: Array<{ day: string; rows: TaskNode[] }> = [];
   for (const node of items) {
     const ts = Date.parse(node.ts);
-    const day = Number.isNaN(ts) ? "未知日期" : dayFmt.format(ts);
+    const day = Number.isNaN(ts) ? "Unknown date" : dayFmt.format(ts);
     const last = groups[groups.length - 1];
     if (last && last.day === day) last.rows.push(node);
     else groups.push({ day, rows: [node] });
@@ -566,16 +540,16 @@ export function BroadcastTab({ taskId }: { taskId: string }) {
 
   return (
     <Card className="overflow-hidden py-0">
-      {/* 工具条 */}
+      {/* toolbar */}
       <div className="flex flex-wrap items-center gap-2 border-b px-4 py-2.5">
         <div className="relative w-full sm:w-64">
           <SearchIcon className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={queryInput}
             onChange={(e) => setQueryInput(e.target.value)}
-            placeholder="搜索内容 / 来源 / 节点 id"
+            placeholder="Search content / source / node ID"
             className="h-8 pl-8"
-            aria-label="搜索播报"
+            aria-label="Search broadcasts"
           />
         </div>
         <div className="flex flex-wrap items-center gap-1">
@@ -607,7 +581,7 @@ export function BroadcastTab({ taskId }: { taskId: string }) {
                 setPage(1);
               }}
             >
-              清除
+              Clear
             </Button>
           )}
         </div>
@@ -620,33 +594,32 @@ export function BroadcastTab({ taskId }: { taskId: string }) {
               setOrder((o) => (o === "desc" ? "asc" : "desc"));
               setPage(1);
             }}
-            aria-label={order === "desc" ? "当前最新在前，点击改为最早在前" : "当前最早在前，点击改为最新在前"}
+            aria-label={order === "desc" ? "Currently newest first; click to switch to oldest first" : "Currently oldest first; click to switch to newest first"}
           >
             {order === "desc" ? <ArrowDownIcon /> : <ArrowUpIcon />}
-            {order === "desc" ? "最新在前" : "最早在前"}
+            {order === "desc" ? "Newest first" : "Oldest first"}
           </Button>
           <Button
             variant={live ? "outline" : "secondary"}
             size="sm"
             className="h-8"
             onClick={() => setLive((v) => !v)}
-            aria-label={live ? "暂停自动刷新" : "恢复自动刷新"}
+            aria-label={live ? "Pause auto-refresh" : "Resume auto-refresh"}
           >
             {live ? <PauseIcon /> : <PlayIcon />}
-            {live ? "自动刷新" : "已暂停"}
+            {live ? "Auto-refresh" : "Paused"}
           </Button>
         </div>
       </div>
 
-      {/* 离开直播位时的未读提示 */}
-      {!atLive && pending > 0 && (
+            {!atLive && pending > 0 && (
         <button
           type="button"
           onClick={backToLive}
           className="flex w-full items-center justify-center gap-1.5 border-b bg-primary/10 py-1.5 font-medium text-primary text-xs hover:bg-primary/15"
         >
           <ArrowUpToLineIcon className="size-3.5" />
-          {pending > 99 ? "99+" : pending} 条新播报 · 回到最新
+          {pending > 99 ? "99+" : pending} new broadcasts · Return to newest
         </button>
       )}
 
@@ -659,7 +632,7 @@ export function BroadcastTab({ taskId }: { taskId: string }) {
           </div>
         ) : items.length === 0 ? (
           <p className="py-10 text-center text-muted-foreground text-sm">
-            {query || kinds.length > 0 ? "没有符合条件的播报。" : "这个任务还没有产生探索节点。"}
+            {query || kinds.length > 0 ? "No broadcasts match the current filters." : "This task has not produced any exploration nodes yet."}
           </p>
         ) : (
           groups.map((group) => (
@@ -696,7 +669,7 @@ export function BroadcastTab({ taskId }: { taskId: string }) {
             <SelectGroup>
               {PAGE_SIZES.map((n) => (
                 <SelectItem key={n} value={String(n)}>
-                  {n} / 页
+                  {n} / page
                 </SelectItem>
               ))}
             </SelectGroup>

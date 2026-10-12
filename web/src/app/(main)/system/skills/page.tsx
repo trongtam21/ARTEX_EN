@@ -199,8 +199,7 @@ function SkillsOverview({
         </p>
       </div>
 
-      {/* 指标卡 */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {stats.map((s) => (
           <div key={s.label} className="rounded-lg border p-3">
             <p className="font-semibold text-2xl tabular-nums">{s.value}</p>
@@ -210,8 +209,7 @@ function SkillsOverview({
         ))}
       </div>
 
-      {/* 调用排行 */}
-      <div className="space-y-2">
+            <div className="space-y-2">
         <Label className="text-muted-foreground text-xs">Call ranking</Label>
         {agg.ranked.length === 0 ? (
           <p className="rounded-lg border border-dashed p-4 text-center text-muted-foreground text-xs">
@@ -271,8 +269,7 @@ function SkillsOverview({
           )}
         </div>
 
-        {/* 未使用（可清理 / 需曝光） */}
-        <div className="space-y-2">
+                <div className="space-y-2">
           <Label className="text-muted-foreground text-xs">
             Unused skills
             {agg.neverUsed.length > 0 && <span className="ml-1 font-normal">({agg.neverUsed.length})</span>}
@@ -341,9 +338,7 @@ export default function SkillsPage() {
   const [pendingDelete, setPendingDelete] = React.useState<PendingDelete>(null);
   const [deleting, setDeleting] = React.useState(false);
 
-  // 调用统计：列表页的次数/Recent call随 api.skills() 一起回来；选中某个 skill 时再拉它的
-  // Recent call明细。missing = 被点名但不存在的 skill（想用但没有）。
-  const [usageCalls, setUsageCalls] = React.useState<SkillCall[]>([]);
+      const [usageCalls, setUsageCalls] = React.useState<SkillCall[]>([]);
   const [usageLoading, setUsageLoading] = React.useState(false);
   const [missing, setMissing] = React.useState<MissingSkill[]>([]);
 
@@ -800,8 +795,7 @@ export default function SkillsPage() {
           <h1 className="font-semibold text-sm leading-tight">Skill</h1>
           <p className="text-muted-foreground text-xs">Skill library · agentskills.io standard · Agent-scoped visibility</p>
         </div>
-        {/* 缺口清单：agent 点名调用、但库里没有的 skill —— 直接是该补什么的依据。 */}
-        {missing.length > 0 && (
+                {missing.length > 0 && (
           <Popover>
             <PopoverTrigger asChild>
               <Button size="sm" variant="outline" className="ml-auto">
@@ -829,8 +823,7 @@ export default function SkillsPage() {
         )}
       </div>
       <div className="flex flex-1 overflow-hidden">
-        {/* ── 左侧文件树 ── */}
-        <div className="flex w-64 shrink-0 flex-col border-r">
+                <div className="flex w-64 shrink-0 flex-col border-r">
           <div className="flex flex-col gap-2 border-b p-2">
             <Button size="sm" variant="outline" className="w-full" onClick={() => setNewOpen(true)}>
               <PlusIcon className="size-3.5" />
@@ -866,8 +859,7 @@ export default function SkillsPage() {
                 const isSkillSelected = selected?.skill === s.name && selected.path === null;
                 return (
                   <div key={s.name}>
-                    {/* skill 根节点 */}
-                    <div
+                                        <div
                       className={cn(
                         "group relative flex cursor-pointer select-none items-center gap-1 rounded px-2 py-1 text-sm",
                         isSkillSelected ? "bg-accent text-accent-foreground" : "hover:bg-muted",
@@ -941,8 +933,7 @@ export default function SkillsPage() {
                       </span>
                     </div>
 
-                    {/* 展开：递归文件树 */}
-                    {isOpen && (
+                                        {isOpen && (
                       <>
                         {renderTree(tree, s.name, 0)}
                         {creating?.skill === s.name && creating.inDir === "" && inlineInputJSX(22)}
@@ -957,8 +948,7 @@ export default function SkillsPage() {
           </ScrollArea>
         </div>
 
-        {/* ── 右侧面板 ── */}
-        <div className="flex flex-1 flex-col overflow-auto p-4">
+                <div className="flex flex-1 flex-col overflow-auto p-4">
           {!selected && (
             <SkillsOverview
               skills={skills}
@@ -988,12 +978,8 @@ export default function SkillsPage() {
                 </div>
               </div>
 
-              {/* 左右分栏：配置（MCP/可见性）在左为主，调用统计在右为辅。
-                  lg 以下放不下时用 flex-row-reverse 回落到单列——统计因 DOM 顺序在前，
-                  窄屏时自然落到配置上方（与改版前的上下顺序一致）。 */}
-              <div className="flex flex-col gap-6 lg:flex-row-reverse lg:items-start">
-                {/* ── 右侧：调用统计 ── */}
-                <div className="space-y-2 lg:w-80 lg:shrink-0">
+                            <div className="flex flex-col gap-6 lg:flex-row-reverse lg:items-start">
+                                <div className="space-y-2 lg:w-80 lg:shrink-0">
                   <Label className="text-muted-foreground text-xs">Usage statistics</Label>
                   <div className="grid grid-cols-3 gap-2">
                     <div className="rounded-md border p-2">
@@ -1050,8 +1036,7 @@ export default function SkillsPage() {
                   )}
                 </div>
 
-                {/* ── 左侧：Linked MCP + 可见性 ── */}
-                <div className="space-y-5 lg:min-w-0 lg:flex-1">
+                                <div className="space-y-5 lg:min-w-0 lg:flex-1">
                   <div className="space-y-2">
                     <Label className="text-muted-foreground text-xs">
                       Linked MCP
@@ -1121,8 +1106,7 @@ export default function SkillsPage() {
         </div>
       </div>
 
-      {/* ── 删除二次确认 ── */}
-      <AlertDialog
+            <AlertDialog
         open={!!pendingDelete}
         onOpenChange={(o) => {
           if (!o) setPendingDelete(null);
@@ -1185,8 +1169,7 @@ export default function SkillsPage() {
               </TabsTrigger>
             </TabsList>
 
-            {/* 基本信息 */}
-            <TabsContent
+                        <TabsContent
               value="basic"
               className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 pt-4 pb-4 data-[state=inactive]:hidden"
             >
@@ -1269,8 +1252,7 @@ export default function SkillsPage() {
               )}
             </TabsContent>
 
-            {/* 可见性 */}
-            <TabsContent value="visibility" className="overflow-y-auto px-4 pt-4 pb-4 data-[state=inactive]:hidden">
+                        <TabsContent value="visibility" className="overflow-y-auto px-4 pt-4 pb-4 data-[state=inactive]:hidden">
               <p className="mb-3 text-muted-foreground text-xs">Selected Agents can see this skill after it is created.</p>
               {agents.length === 0 ? (
                 <p className="text-muted-foreground text-xs">(No Agents)</p>

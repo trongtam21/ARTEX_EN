@@ -17,8 +17,8 @@ export default function SetupPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
-  // 查不到初始化状态时不能默认当成"未初始化"——那样会把初始化表单摆给一个
-  // 其实已经设过密码的实例，用户照着填就会覆盖掉原密码。此时Close入口。
+  // An unavailable initialization status must not default to "not initialized": that could show the setup form
+  // for an instance that already has a password and overwrite it. Close the entry point instead.
   const [unavailable, setUnavailable] = useState(false);
 
   useEffect(() => {

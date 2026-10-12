@@ -186,7 +186,7 @@ function InterceptCard({ step, getDetail }: { step: Activity; getDetail: (seq: n
   }, [step.summary]);
 
   const toolName = React.useMemo(() => {
-    const m = /(?:工具|Tool)\s+(\S+)\s+(?:请求|requests?)/i.exec(step.summary);
+    const m = /(?:\u5de5\u5177|Tool)\s+(\S+)\s+(?:\u8bf7\u6c42|requests?)/i.exec(step.summary);
     return m ? m[1] : step.summary;
   }, [step.summary]);
 

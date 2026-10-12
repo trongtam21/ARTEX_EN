@@ -151,8 +151,7 @@ function PoolSheet({
 
   const enabled = pool?.enabled ?? false;
   const chain = pool?.chain ?? [];
-  // 参与轮询的成员（排除被标记「Excluded from failover」的），顺序即后端实际的尝试顺序。
-  const inChain = chain.filter((m) => m.active || !m.excluded);
+    const inChain = chain.filter((m) => m.active || !m.excluded);
   const tripped = chain.filter((m) => m.state === "tripped");
 
   return (
@@ -292,7 +291,6 @@ function PoolSheet({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Model配置抽屉（Create / 编辑共用同一套表单）
 // ─────────────────────────────────────────────────────────────────────────────
 
 function ProfileSheet({
@@ -332,9 +330,7 @@ function ProfileSheet({
   const [loadingModels, setLoadingModels] = React.useState(false);
   const [modelsOpen, setModelsOpen] = React.useState(false);
 
-  // 每次打开时从传入的 profile 灌一遍表单（Create则重置为默认值）。抽屉关掉再打开
-  // 就是一次干净的开始，不会留下上一个配置的残影。
-  React.useEffect(() => {
+      React.useEffect(() => {
     if (!open) return;
     setName(profile?.name ?? "");
     setFormat(profile?.format === "openai" || profile?.format === "openai-responses" ? profile.format : "anthropic");
@@ -385,9 +381,7 @@ function ProfileSheet({
     if (testing) return;
     setTesting(true);
     try {
-      // 用配置实际会跑的思考参数来测，这样不支持该字段的Model在这里就失败，
-      // 而不是等到跑任务时才炸。传 profile id：Key 输入框留空时用已存的 Key。
-      const r = await api.testLLM(
+                  const r = await api.testLLM(
         format,
         model,
         baseUrl,
@@ -399,8 +393,7 @@ function ProfileSheet({
         streaming,
         sessionHeaderKey.trim(),
       );
-      // 回复内容一并展示：看得见Model确实说了话，才算和会话里跑通是一回事。
-      if (r.ok)
+            if (r.ok)
         toast.success(`Connection successful · ${r.latency_ms ?? "?"}ms · ${r.model ?? model}`, {
           description: r.reply ? `Reply: ${r.reply}` : undefined,
         });
@@ -437,9 +430,7 @@ function ProfileSheet({
         pool_exclude: poolExclude,
         streaming,
         max_tokens: Math.max(0, Number(maxTokens) || 0),
-        // 字段名开关只对 openai(Chat Completions) 有意义，其它Format一律回落到默认；
-        // 后端也会再做一次同样的归一化，这里只是别让 UI 送出自相矛盾的值。
-        max_tokens_field: format === "openai" ? toStore(maxTokensField) : "",
+                        max_tokens_field: format === "openai" ? toStore(maxTokensField) : "",
         session_header_key: sessionHeaderKey.trim(),
         retry,
       });
@@ -512,9 +503,7 @@ function ProfileSheet({
                 value={model}
                 onChange={(e) => setModel(e.target.value)}
               />
-              {/* modal: 这个 Popover 的内容被 portal 到 <body>，在 Sheet 的滚动锁之外，
-                  不加 modal 时列表能渲染却滚不动。modal 让它自己持有最上层滚动锁。 */}
-              <Popover open={modelsOpen} onOpenChange={setModelsOpen} modal>
+                            <Popover open={modelsOpen} onOpenChange={setModelsOpen} modal>
                 <PopoverTrigger asChild>
                   <Button
                     type="button"
@@ -625,8 +614,9 @@ function ProfileSheet({
             </div>
           </div>
           <p className="-mt-2 text-muted-foreground text-xs">
-            限速 0 = 不限，全 Agent 共享。上下文窗口单位 K（千 token），0 = 默认 200K，上限 1000（即
-            1M）；设太高会导致压缩不触发。
+            A rate limit of 0 means unlimited and is shared by all agents. The context window is measured in K (thousand
+            tokens); 0 uses the 200K default and the maximum is 1000 (1M). Setting it too high may prevent compression
+            from triggering.
           </p>
 
           <div className="grid gap-3 rounded-lg border p-3">
@@ -636,7 +626,7 @@ function ProfileSheet({
                   Failover priority
                 </Label>
                 <p className="text-muted-foreground text-xs">
-                  数字越大越先被选中；Active配置恒为第 1 顺位，与本值无关。相同优先级的配置会轮流打头，天然分摊额度。
+                  Higher numbers are selected first; the active profile is always first regardless of this value. Profiles with the same priority take turns at the front, naturally spreading the load.
                 </p>
               </div>
               <Input
@@ -651,8 +641,8 @@ function ProfileSheet({
               <div className="grid gap-0.5">
                 <Label className="text-sm">Excluded from failover</Label>
                 <p className="text-muted-foreground text-xs">
-                  开启后不会被当作故障转移目标（仍可被 Agent / 任务显式指定使用）。 适合「只给某个 Agent
-                  专用、不希望别人失败时烧掉」的昂贵配置。
+                  When enabled, this profile is not used as a failover target, but agents and tasks can still select it explicitly.
+                  This is useful for an expensive profile reserved for one agent rather than consumed by other agents' failures.
                 </p>
               </div>
               <Switch checked={poolExclude} onCheckedChange={setPoolExclude} aria-label="Excluded from failover" />
@@ -661,12 +651,12 @@ function ProfileSheet({
               <div className="grid gap-0.5">
                 <Label className="text-sm">Streaming output · streaming</Label>
                 <p className="text-muted-foreground text-xs">
-                  开启（默认）走流式 SSE，有运行中实时进度与实时 token 计数。 Close则走真·非流式（stream:false，
-                  一次性返回完整响应）——可绕开部分网关糟糕的 SSE 实现（空帧 / 思考字段丢帧），
-                  代价是失去运行中的实时进度。
+                  Enabled (default) uses streaming SSE with live progress and token counts while a request runs. Disabled uses
+                  a true non-streaming request (stream:false) that returns the complete response at once, which can bypass
+                  broken SSE implementations in some gateways (empty frames or dropped thinking fields) at the cost of live progress.
                 </p>
               </div>
-              <Switch checked={streaming} onCheckedChange={setStreaming} aria-label="流式输出" />
+              <Switch checked={streaming} onCheckedChange={setStreaming} aria-label="Streaming output" />
             </div>
           </div>
 
@@ -674,12 +664,13 @@ function ProfileSheet({
             <div className="flex items-center justify-between gap-4">
               <div className="grid gap-0.5">
                 <Label htmlFor="p-max-tokens" className="text-sm">
-                  输出上限 · max tokens
+                  Output limit · max tokens
                 </Label>
                 <p className="text-muted-foreground text-xs">
-                  单次回复最多生成多少 token，随每次请求发出。0（默认）= 不发送该字段，由Service端默认值决定。
-                  这与上面的「上下文窗口」是两回事：那是Model总容量，只在本地用来算压缩阈值。
-                  设太小会让推理Model在思考阶段就被截断，一个字答案都出不来。
+                  Maximum tokens generated in one response, sent with every request. 0 (default) omits this field and lets
+                  the service choose its default. This is separate from the context window above, which is the model's total
+                  capacity and is used locally to calculate the compression threshold. Setting this too low can truncate a
+                  reasoning model during its thinking phase before it produces any answer.
                 </p>
               </div>
               <Input
@@ -721,8 +712,8 @@ function ProfileSheet({
               <div className="grid gap-0.5">
                 <Label className="text-sm">Thinking toggle · thinking.type</Label>
                 <p className="text-muted-foreground text-xs">
-                  控制是否发送 thinking 字段。不发送=不带该字段（兼容 MiniMax 等不支持 的Model）；Close=发
-                  disabled；开启=发 enabled。与下面的强度互相独立。
+                  Controls whether to send the thinking field. “Do not send” omits it for providers such as MiniMax that do not
+                  support it; Disabled sends disabled; Enabled sends enabled. This is independent of the effort setting below.
                 </p>
               </div>
               <Select value={thinkingType} onValueChange={setThinkingType}>
@@ -742,8 +733,8 @@ function ProfileSheet({
               <div className="grid gap-0.5">
                 <Label className="text-sm">Reasoning effort · reasoning_effort</Label>
                 <p className="text-muted-foreground text-xs">
-                  独立的强度档位（OpenAI reasoning_effort / Anthropic output_config.effort）。 有些接口没有 thinking
-                  字段、只靠强度即可Active思考，故可单独设置、不发送思考开关。
+                  An independent effort level (OpenAI reasoning_effort / Anthropic output_config.effort). Some APIs have no
+                  thinking field and enable reasoning through effort alone, so this can be configured without sending the thinking toggle.
                 </p>
               </div>
               <Select value={effort} onValueChange={setEffort}>
@@ -786,9 +777,7 @@ export default function LLMPage() {
   const [profiles, setProfiles] = React.useState<LLMProfile[]>([]);
   const [pool, setPool] = React.useState<LLMPoolStatus | null>(null);
   const [poolOpen, setPoolOpen] = React.useState(false);
-  // 抽屉的开关和内容分开存：Close时 editing 保持不变，否则Close动画期间标题会从
-  // 「编辑 X」闪成「Create」。editing = null 表示Create。
-  const [editOpen, setEditOpen] = React.useState(false);
+      const [editOpen, setEditOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<LLMProfile | null>(null);
   const openEditor = React.useCallback((p: LLMProfile | null) => {
     setEditing(p);
@@ -816,8 +805,7 @@ export default function LLMPage() {
     void load();
   }, [load]);
 
-  // 卡片上的健康徽章按 profile id 取轮询状态。
-  const health = React.useMemo(() => {
+    const health = React.useMemo(() => {
     const m = new Map<string, LLMPoolMember>();
     for (const c of pool?.chain ?? []) m.set(c.profile_id, c);
     return m;
@@ -826,16 +814,16 @@ export default function LLMPage() {
   async function activate(id: string, name: string) {
     try {
       await api.activateLLMProfile(id);
-      toast.success(`已Active：${name}`);
+      toast.success(`Activated: ${name}`);
       await load();
     } catch (e) {
-      toast.error(`Active失败：${(e as Error).message}`);
+      toast.error(`Activation failed: ${(e as Error).message}`);
     }
   }
 
   async function remove(p: LLMProfile) {
     if (p.is_default) {
-      toast.error("无法删除当前Active的配置");
+      toast.error("The active profile cannot be deleted");
       return;
     }
     try {
@@ -884,8 +872,7 @@ export default function LLMPage() {
             {profiles.map((p) => {
               const h = healthOf(p, health.get(p.id));
               return (
-                // biome-ignore lint/a11y/useSemanticElements: 卡片内含自己的操作按钮，用原生 <button> 会造成按钮嵌套（非法 HTML）
-                <Card
+                                <Card
                   key={p.id}
                   role="button"
                   tabIndex={0}
@@ -932,8 +919,7 @@ export default function LLMPage() {
                       {p.reasoning_effort && (
                         <span>Reasoning {p.reasoning_effort === "off" ? "off" : p.reasoning_effort}</span>
                       )}
-                      {/* 轮询相关的两个字段只在轮询开着时才有意义，关着时不占版面 */}
-                      {poolOn &&
+                                            {poolOn &&
                         !p.is_default &&
                         (p.pool_exclude ? <span>Excluded from failover</span> : <span>Priority {p.priority ?? 0}</span>)}
                     </div>
