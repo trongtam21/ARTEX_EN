@@ -294,7 +294,7 @@ export function AssetTree({
           selected === null ? "bg-accent font-medium" : "hover:bg-accent/50",
         )}
       >
-        <span>全部资产</span>
+        <span>All Assets</span>
         <span className="text-muted-foreground text-xs tabular-nums">{findingTotal}</span>
       </button>
 
@@ -307,8 +307,8 @@ export function AssetTree({
 
       {truncated && (
         <p className="px-1 text-muted-foreground text-xs">
-          资产过多，已隐藏{(droppedKinds ?? []).map((k) => KIND_LABEL[k as FindingAssetKind] ?? k).join(" / ")}
-          层级（计数仍已计入上层）。用筛选或过滤框收窄可看到完整层级。
+          Too many assets. The {(droppedKinds ?? []).map((k) => KIND_LABEL[k as FindingAssetKind] ?? k).join(" / ")} levels are hidden
+          (counts are still included in their parent levels). Narrow the results with search or filters to view the full hierarchy.
         </p>
       )}
     </div>
@@ -343,7 +343,7 @@ function AssetTreeRow({
           type="button"
           onClick={onToggle}
           className="flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground hover:text-foreground"
-          aria-label={open ? "折叠" : "展开"}
+          aria-label={open ? "Collapse" : "Expand"}
           aria-expanded={open}
         >
           <ChevronRightIcon className={cn("size-3.5 transition-transform", open && "rotate-90")} />
@@ -362,16 +362,16 @@ function AssetTreeRow({
       </button>
       <span className="flex shrink-0 items-center gap-1 text-xs tabular-nums">
         {node.critical > 0 && (
-          <span className="text-rose-600" title={`严重 ${node.critical}`}>
+          <span className="text-rose-600" title={`Critical ${node.critical}`}>
             {node.critical}
           </span>
         )}
         {node.high > 0 && (
-          <span className="text-red-500" title={`高危 ${node.high}`}>
+          <span className="text-red-500" title={`High ${node.high}`}>
             {node.high}
           </span>
         )}
-        <span className="text-muted-foreground" title={`共 ${node.total} 条发现`}>
+        <span className="text-muted-foreground" title={`${node.total} total findings`}>
           {node.total}
         </span>
       </span>

@@ -158,7 +158,7 @@ export function FindingTrafficPanel({
                 {b.note ? <p className="whitespace-pre-wrap text-sm">{b.note}</p> : null}
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-muted-foreground text-xs">
-                    {new Date(b.snapshot.captured_at * 1000).toLocaleString("zh-CN")}
+                    {new Date(b.snapshot.captured_at * 1000).toLocaleString("en-US")}
                   </span>
                   <div className="flex flex-wrap gap-1">
                     <Button variant="outline" size="sm" onClick={() => setPreview(b.id)}>
